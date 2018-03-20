@@ -16,7 +16,7 @@ PODS:
     - BlocksKit/Core
     - BlocksKit/DynamicDelegate
   - evernote-cloud-sdk-ios (2.0.2)
-  - FLEX (2.1.1)
+  - FLEX (2.4.0)
   - FontAwesome+iOS (0.0.1)
   - hpple (0.2.0)
   - JazzHands (2.0.0)
@@ -131,7 +131,7 @@ SPEC CHECKSUMS:
   APParallaxHeader: 854bc48a2487ca12c702f8a236fec0d89cdac5c3
   BlocksKit: 7f422b971407001178d181a43b99014ea2591fe6
   evernote-cloud-sdk-ios: 7a6e5402b837ea79ef0179caff5ffe7b4f235615
-  FLEX: 27b768fcae23a313a1eb115076d429180ca9b472
+  FLEX: bd1a39e55b56bb413b6f1b34b3c10a0dc44ef079
   FontAwesome+iOS: c6d3bbd2856b9633028d316d56133d45fb6a6cb0
   hpple: 3b765f96fc2cd56ad1a49aef6f7be5cb2aa64b57
   JazzHands: 00002e9b1284e7fc1ac6555012e81b8942477242

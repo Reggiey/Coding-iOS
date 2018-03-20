@@ -5,7 +5,6 @@
 //  Created by Ease on 2016/11/28.
 //  Copyright © 2016年 net.coding. All rights reserved.
 //
-
 //MinIntervalDutation 单位（秒）
 #define kEALogKey_PostServerPath @"https://tracker.coding.net/v1"
 #define kEALogKey_MinIntervalDutation (60 * 30)
@@ -14,7 +13,6 @@
 #define kEALogKey_StartTime @"startTime"
 #define kEALogKey_FinishTime @"finishTime"
 #define kEALogKey_LogInfo @"log"
-
 #import <netdb.h>
 #import <sys/socket.h>
 #import <arpa/inet.h>
@@ -25,15 +23,12 @@
 #import "Login.h"
 #import "AFNetworkReachabilityManager.h"
 #import "NSData+gzip.h"
-
 @interface EADeviceToServerLog ()
 @property (strong, nonatomic) NSMutableDictionary *logDict;
 @property (strong, nonatomic) NSArray *hostStrList, *portList;
 @property (assign, nonatomic) BOOL isRunning;
 @end
-
 @implementation EADeviceToServerLog
-
 + (instancetype)shareManager{
     static EADeviceToServerLog *shared_manager = nil;
     static dispatch_once_t pred;
@@ -42,7 +37,6 @@
     });
     return shared_manager;
 }
-
 - (instancetype)init
 {
     self = [super init];
@@ -55,7 +49,6 @@
     }
     return self;
 }
-
 - (void)p_resetLog{
     if (!_logDict) {
         _logDict = @{}.mutableCopy;
@@ -63,38 +56,32 @@
         [_logDict removeAllObjects];
     }
     _logDict[kEALogKey_StartTime] = [self p_curTime];
-//    添加 App 信息
+    //    添加 App 信息
     _logDict[@"userAgent"] = [NSString userAgentStr];
     _logDict[@"globalKey"] = [Login curLoginUser].global_key;
 }
-
 - (void)p_addLog:(NSDictionary *)dict{
     for (NSString *key in dict) {
         _logDict[key] = dict[key];
     }
 }
-
 - (NSNumber *)p_curTime{
     return @((long)(1000 *[[NSDate date] timeIntervalSince1970]));
 }
-
 - (NSString*)p_dictionaryToJson:(NSDictionary *)dict{
     NSError *parseError = nil;
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingPrettyPrinted error:&parseError];
     return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
-
 - (void)p_updateLogDate{
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:[NSDate date] forKey:kEALogKey_LastTimeLogDate];
     [defaults synchronize];
 }
-
 - (NSDate *)p_lastTimeLogDate{
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     return [defaults objectForKey:kEALogKey_LastTimeLogDate];
 }
-
 - (BOOL)p_canStartLog{
     if (_isRunning) {
         return NO;
@@ -106,7 +93,6 @@
         return [[NSDate date] timeIntervalSinceDate:lastTimeLogDate] > kEALogKey_MinIntervalDutation;
     }
 }
-
 - (void)tryToStart{
     if ([self p_canStartLog]) {
         [self startLog];
@@ -114,7 +100,6 @@
         [self tryToPostToServer];
     }
 }
-
 - (void)tryToPostToServer{
     if (![AFNetworkReachabilityManager sharedManager].isReachableViaWiFi) {
         return;
@@ -140,13 +125,11 @@
         _isRunning = NO;
     }
 }
-
 - (NSData *)p_gzipStr:(NSString *)string{
     NSData *data = [string dataUsingEncoding:NSUTF8StringEncoding];
     data = [NSData gzipData:data];
     return data;
 }
-
 - (void)handlePostToServerSuccess:(BOOL)isSuccess{
     _isRunning = NO;
     if (isSuccess) {
@@ -157,7 +140,6 @@
         }
     }
 }
-
 - (void)startLog{
     if (_isRunning) {
         return;
@@ -186,7 +168,6 @@
         }
     }];
 }
-
 - (void)handleFinish{
     _isRunning = NO;
     _logDict[kEALogKey_FinishTime] = [self p_curTime];
@@ -196,13 +177,10 @@
     [self p_resetLog];
     [self tryToPostToServer];
 }
-
-
 - (void)handleCancel{
     _isRunning = NO;
     [self p_resetLog];
 }
-
 - (void)p_writeLog{
     if (!_logDict) {
         return;
@@ -225,7 +203,6 @@
     }
     [self p_updateLogDate];
 }
-
 - (NSString *)p_readLog{
     NSString *logFilePath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject stringByAppendingFormat:@"/%@", kEALogKey_LogFileName];
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -236,7 +213,6 @@
         return nil;
     }
 }
-
 - (void)getLocalIPBlock:(void(^)(NSDictionary *dictLocalIP))block{
     NSURL *url = [NSURL URLWithString:@"http://ip.cn"];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
@@ -257,7 +233,6 @@
     }];
     [task resume];
 }
-
 - (void)getHostIPsBlock:(void(^)(NSDictionary *dictHostIPs))block{
     static NSMutableArray *dictHostIPList;
     if (dictHostIPList.count == _hostStrList.count){
@@ -274,7 +249,6 @@
         }];
     }
 }
-
 - (void)getHost:(NSString *)hostStr ipBlock:(void(^)(NSDictionary *dictHostIP))block{
     NSMutableDictionary *dictHostIP = @{kEALogKey_StartTime: [self p_curTime]}.mutableCopy;
     dictHostIP[@"host"] = hostStr;
@@ -282,7 +256,6 @@
     dictHostIP[kEALogKey_FinishTime] = [self p_curTime];
     block(dictHostIP);
 }
-
 - (NSString *)p_getIPWithHostName:(NSString *)hostName{
     struct hostent *hs;
     struct sockaddr_in server;
@@ -292,7 +265,6 @@
     }
     return nil;
 }
-
 - (void)getHostPortsBlock:(void(^)(NSDictionary *dictHostPorts))block{
     static NSMutableArray *dictHostPortList;
     if (dictHostPortList.count == _hostStrList.count * _portList.count){
@@ -309,7 +281,6 @@
         }];
     }
 }
-
 - (void)getHost:(NSString *)hostStr port:(NSNumber *)port block:(void(^)(NSDictionary *dictHostPort))block{
     NSMutableDictionary *dictHostPort = @{kEALogKey_StartTime: [self p_curTime]}.mutableCopy;
     dictHostPort[@"host"] = hostStr;
@@ -319,7 +290,6 @@
     dictHostPort[kEALogKey_FinishTime] = [self p_curTime];
     block(dictHostPort);
 }
-
 - (BOOL)p_canLinkToHost:(NSString *)hostStr port:(NSNumber *)port errorStr:(NSString **)errorStr{
     int socketFileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
     struct hostent *hs;
@@ -344,7 +314,6 @@
         }
     }
 }
-
 - (void)getHostMtrsBlock:(void(^)(NSDictionary *dictHostMtrs))block{
     NSString *dnsStr = [self.logDict[@"localIp"][@"dns"] firstObject];
     if (dnsStr.length > 0 && [dnsStr componentsSeparatedByString:@"."].count != 4) {//不是 ipv4 的暂时不处理
@@ -366,7 +335,6 @@
         }];
     }
 }
-
 - (void)getHost:(NSString *)hostStr mtrBlock:(void(^)(NSDictionary *dictHostMtr))block{
     NSMutableDictionary *dictHostMtr = @{kEALogKey_StartTime: [self p_curTime]}.mutableCopy;
     dictHostMtr[@"host"] = hostStr;
@@ -376,7 +344,6 @@
         block(dictHostMtr);
     }];
 }
-
 - (void)getGitsBlock:(void(^)(NSDictionary *dictGits))block{
     NSURL *repoURL = [NSURL URLWithString:@"https://git.coding.net/coding/test-point.git"];
     
@@ -390,16 +357,18 @@
     NSMutableDictionary *dictGits = @{kEALogKey_StartTime: [self p_curTime]}.mutableCopy;
     dictGits[@"url"] = repoURL.absoluteString;
     NSError* error = nil;
-    GTRepository *repo = [GTRepository cloneFromURL:repoURL toWorkingDirectory:localURL options:@{GTRepositoryCloneOptionsCheckout: @NO} error:&error transferProgressBlock:^(const git_transfer_progress *progress, BOOL *stop) {
+    GTRepository *repo = [GTRepository cloneFromURL:repoURL toWorkingDirectory:localURL options:@{} error:&error transferProgressBlock:^(const git_transfer_progress *progress, BOOL * _Nonnull stop) {
         DebugLog(@"received_objects_count: %d", progress->received_objects);
-    } checkoutProgressBlock:^(NSString *path, NSUInteger completedSteps, NSUInteger totalSteps) {//{Checkout: @NO}，所以这里不会执行
-        DebugLog(@"checkout_progress:%.2f", (float)completedSteps/totalSteps);
     }];
+//    GTRepository *repo = [GTRepository cloneFromURL:repoURL toWorkingDirectory:localURL options:@{} error:&error transferProgressBlock:^(const git_transfer_progress *progress, BOOL *stop) {
+//        DebugLog(@"received_objects_count: %d", progress->received_objects);
+//    } checkoutProgressBlock:^(NSString *path, NSUInteger completedSteps, NSUInteger totalSteps) {//{Checkout: @NO}，所以这里不会执行
+//        DebugLog(@"checkout_progress:%.2f", (float)completedSteps/totalSteps);
+//    }];
     
     dictGits[kEALogKey_FinishTime] = [self p_curTime];
     dictGits[@"result"] = repo? @YES: @NO;
     dictGits[kEALogKey_LogInfo] = error.description ?: @"";
     block(@{@"git": dictGits});
 }
-
 @end
